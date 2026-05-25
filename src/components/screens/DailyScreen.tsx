@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { User } from '@supabase/supabase-js';
 import { DndContext, DragEndEvent, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
@@ -10,7 +10,6 @@ import { Item, toDateString } from '@/lib/types';
 import DateSelector from '@/components/DateSelector';
 import SortableItemCard from '@/components/SortableItemCard';
 import ItemCard from '@/components/ItemCard';
-import AddItemModal from '@/components/AddItemModal';
 
 interface DailyScreenProps {
   user: User;
@@ -20,7 +19,9 @@ export default function DailyScreen({ user }: DailyScreenProps) {
   const [selectedDate, setSelectedDate] = useState(() => toDateString(new Date()));
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -41,6 +42,23 @@ export default function DailyScreen({ user }: DailyScreenProps) {
       .order('created_at', { ascending: false });
     setItems(data ?? []);
     setLoading(false);
+  };
+
+  const handleCapture = async () => {
+    const title = draft.trim();
+    if (!title) return;
+    setSaving(true);
+    const { data, error } = await supabase
+      .from('personal_items')
+      .insert({ user_id: user.id, title, list: 'daily', due_date: selectedDate })
+      .select()
+      .single();
+    if (!error && data) {
+      setItems((prev) => [data, ...prev]);
+      setDraft('');
+    }
+    setSaving(false);
+    inputRef.current?.focus();
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -81,6 +99,27 @@ export default function DailyScreen({ user }: DailyScreenProps) {
       <div className="mb-4">
         <h1 className="text-2xl font-extrabold text-warm-text leading-none mb-3">Daily</h1>
         <DateSelector selectedDate={selectedDate} onSelect={setSelectedDate} />
+      </div>
+
+      {/* Inline add-task input */}
+      <div className="flex items-center gap-2 bg-white rounded-2xl border border-border shadow-card px-4 py-3 mb-4">
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Add a task..."
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleCapture()}
+          className="flex-1 bg-transparent text-sm text-warm-text placeholder:text-muted focus:outline-none"
+        />
+        <button
+          onClick={handleCapture}
+          disabled={saving || !draft.trim()}
+          className="w-7 h-7 rounded-full bg-blush-dark text-white flex items-center justify-center text-lg leading-none flex-shrink-0 disabled:opacity-30 transition-opacity active:scale-90"
+          aria-label="Add"
+        >
+          +
+        </button>
       </div>
 
       {loading ? (
@@ -138,30 +177,6 @@ export default function DailyScreen({ user }: DailyScreenProps) {
             </div>
           )}
         </>
-      )}
-
-      <button
-        onClick={() => setShowAdd(true)}
-        className="fixed right-4 z-40 rounded-full bg-blush-dark text-white flex items-center justify-center text-2xl font-light active:scale-90 transition-all"
-        aria-label="Add item"
-        style={{
-          bottom: 'calc(env(safe-area-inset-bottom) + 58px + 14px)',
-          width: '52px',
-          height: '52px',
-          boxShadow: '0 4px 16px rgba(240,160,160,0.45)',
-        }}
-      >
-        +
-      </button>
-
-      {showAdd && (
-        <AddItemModal
-          user={user}
-          activeTab="daily"
-          selectedDate={selectedDate}
-          onClose={() => setShowAdd(false)}
-          onAdded={() => { setShowAdd(false); fetchItems(); }}
-        />
       )}
     </div>
   );

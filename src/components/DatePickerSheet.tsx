@@ -20,10 +20,10 @@ export default function DatePickerSheet({
   const [selected, setSelected] = useState(() => toDateString(new Date()));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-6" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
       <div
-        className="relative w-full max-w-sm bg-white rounded-3xl px-5 py-6 shadow-soft"
+        className="relative w-full bg-white rounded-t-3xl shadow-soft px-5 pt-5 pb-8"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -35,7 +35,9 @@ export default function DatePickerSheet({
             ✕
           </button>
         </div>
+
         <DateSelector selectedDate={selected} onSelect={setSelected} />
+
         <button
           onClick={() => onPick(selected)}
           className="mt-5 w-full bg-blush-dark text-white rounded-2xl py-3 text-sm font-bold active:scale-[0.98] transition-all"
