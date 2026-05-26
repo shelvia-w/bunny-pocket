@@ -126,8 +126,15 @@ export default function WeeklyScreen({ user }: WeeklyScreenProps) {
       </div>
 
       {loading ? (
-        <div className="flex justify-center pt-16">
-          <div className="text-2xl animate-pulse">🐰</div>
+        <div className="min-h-screen bg-[#FFF9F2] flex flex-col items-center px-6 pt-36">
+          <Image
+            src="/images/bunny-mascot.png"
+            alt="Bunny Pocket loading"
+            width={80}
+            height={80}
+            className="h-20 w-20 object-contain animate-pulse opacity-90"
+          />
+          <p className="mt-4 text-sm text-[#8B7E78]">Opening your pocket...</p>
         </div>
       ) : (
         <div className="space-y-3">
