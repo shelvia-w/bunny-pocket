@@ -1,4 +1,4 @@
-# bunny-pocket
+# Bunny Pocket
 
 ![Bunny Pocket social banner](public/images/social-banner.png)
 
