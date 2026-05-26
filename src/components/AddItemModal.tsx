@@ -73,10 +73,18 @@ export default function AddItemModal({
     weekly: 'What should you work on?',
   };
 
+  const isWeekly = activeTab === 'weekly';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
+    <div className={`fixed inset-0 z-50 flex ${isWeekly ? 'items-center justify-center p-4' : 'items-end'}`}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" onClick={onClose} />
-      <div className="relative w-full bg-white rounded-t-3xl shadow-soft px-5 pt-5 pb-8 animate-in slide-in-from-bottom duration-200">
+      <div
+        className={`relative w-full bg-white shadow-soft px-5 pt-5 pb-8 animate-in duration-200 ${
+          isWeekly
+            ? 'max-w-sm rounded-3xl zoom-in-95 fade-in'
+            : 'rounded-t-3xl slide-in-from-bottom'
+        }`}
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-extrabold text-warm-text">{TAB_LABELS[activeTab]}</h2>
           <button onClick={onClose} className="w-7 h-7 rounded-full bg-cream flex items-center justify-center text-muted hover:text-warm-text transition-colors">✕</button>

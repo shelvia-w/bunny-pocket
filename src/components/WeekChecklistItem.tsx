@@ -39,6 +39,7 @@ export default function WeekChecklistItem({
 }: WeekChecklistItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [editingSubtask, setEditingSubtask] = useState<Item | null>(null);
   const [addingSubtask, setAddingSubtask] = useState(false);
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,9 +88,12 @@ export default function WeekChecklistItem({
           {subtasks.map((sub) => (
             <div key={sub.id} className="flex items-center gap-2">
               <Checkbox checked={sub.status === 'done'} onToggle={() => onToggleSubtask(sub)} size="sm" />
-              <span className={`flex-1 text-xs ${sub.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}>
+              <button
+                className={`flex-1 text-left text-xs ${sub.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}
+                onClick={() => setEditingSubtask(sub)}
+              >
                 {sub.title}
-              </span>
+              </button>
               <button
                 onClick={() => onDeleteSubtask(sub)}
                 className="text-border hover:text-muted transition-colors text-base leading-none flex-shrink-0"
@@ -154,6 +158,14 @@ export default function WeekChecklistItem({
           item={item}
           onSave={(updated) => { onSave(updated); setEditOpen(false); }}
           onClose={() => setEditOpen(false)}
+        />
+      )}
+
+      {editingSubtask && (
+        <EditItemSheet
+          item={editingSubtask}
+          onSave={(updated) => { onSave(updated); setEditingSubtask(null); }}
+          onClose={() => setEditingSubtask(null)}
         />
       )}
     </div>
