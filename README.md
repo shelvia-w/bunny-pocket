@@ -6,26 +6,20 @@ Bunny Pocket is a cozy, mobile-first planner for capturing thoughts, planning th
 
 ## Functionalities
 
-- Sign in with Supabase authentication.
-- Capture quick thoughts and tasks in the Pocket screen.
-- Reorder Pocket and Daily items with drag and drop.
-- Move Pocket items into Daily with a selected date.
-- Move Pocket items into Weekly with a selected priority section.
-- Plan Daily tasks by date.
-- Add optional reminder times for Daily tasks.
-- Mark tasks as done or move them back to todo.
-- Edit task titles and details.
-- Delete tasks.
-- Organize Weekly tasks by week.
-- Navigate between previous, current, and future weeks.
-- Group Weekly tasks into three sections:
-  - Important + Urgent
-  - Important + Not Urgent
-  - Keep in Mind
-- Add subtasks under Weekly tasks.
-- Move Weekly tasks into Daily.
-- View cute empty, loading, and completion states.
-- Use the app as a mobile-friendly PWA with bottom navigation.
+1. **Capture tasks quickly**  
+   Add thoughts and tasks to the Pocket screen, then edit titles, details, or delete them anytime.
+
+2. **Plan daily tasks by date**  
+   Move items into Daily, choose a date, add optional reminder times, and mark tasks as done or todo.
+
+3. **Organize weekly priorities**  
+   Plan tasks by week and group them into Important + Urgent, Important + Not Urgent, and Keep in Mind.
+
+4. **Move and reorder tasks easily**  
+   Drag and drop items, reorder lists, and move tasks between Pocket, Daily, and Weekly.
+
+5. **Use it as a cute mobile PWA**  
+   Sign in with Supabase, navigate with bottom tabs, and enjoy cute empty, loading, and completion states.
 
 ## Using This Code
 
