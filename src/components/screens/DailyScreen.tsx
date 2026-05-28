@@ -64,12 +64,16 @@ export default function DailyScreen({ user }: DailyScreenProps) {
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const todo = items.filter((i) => i.status === 'todo');
+    const todo = items.filter((i) => i.parent_id === null && i.status === 'todo');
     const oldIndex = todo.findIndex((i) => i.id === active.id);
     const newIndex = todo.findIndex((i) => i.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
     const reorderedTodo = arrayMove(todo, oldIndex, newIndex);
-    setItems([...reorderedTodo, ...items.filter((i) => i.status === 'done')]);
+    setItems([
+      ...reorderedTodo,
+      ...items.filter((i) => i.parent_id === null && i.status === 'done'),
+      ...items.filter((i) => i.parent_id !== null),
+    ]);
     await Promise.all(
       reorderedTodo.map((item, index) =>
         supabase.from('personal_items').update({ sort_order: index }).eq('id', item.id)
@@ -85,7 +89,7 @@ export default function DailyScreen({ user }: DailyScreenProps) {
 
   const deleteItem = async (item: Item) => {
     await supabase.from('personal_items').delete().eq('id', item.id);
-    setItems((prev) => prev.filter((i) => i.id !== item.id));
+    setItems((prev) => prev.filter((i) => i.id !== item.id && i.parent_id !== item.id));
   };
 
   const moveToTomorrow = async (item: Item) => {
@@ -99,15 +103,77 @@ export default function DailyScreen({ user }: DailyScreenProps) {
       .eq('id', item.id);
 
     if (!error) {
-      setItems((prev) => prev.filter((i) => i.id !== item.id));
+      await supabase
+        .from('personal_items')
+        .update({ due_date: dueDate, updated_at: new Date().toISOString() })
+        .eq('parent_id', item.id);
+      setItems((prev) => prev.filter((i) => i.id !== item.id && i.parent_id !== item.id));
     }
   };
 
   const onSave = (updated: Item) =>
     setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
 
-  const todo = items.filter((i) => i.status === 'todo');
-  const done = items.filter((i) => i.status === 'done');
+  const addSubtask = async (parent: Item, title: string) => {
+    const { data, error } = await supabase
+      .from('personal_items')
+      .insert({
+        user_id: user.id,
+        title,
+        list: 'daily',
+        parent_id: parent.id,
+        due_date: parent.due_date,
+      })
+      .select()
+      .single();
+
+    if (!error && data) setItems((prev) => [...prev, data as Item]);
+  };
+
+  const reorderSubtasks = async (parent: Item, activeId: string, overId: string) => {
+    const subtasks = items.filter((i) => i.parent_id === parent.id);
+    const oldIndex = subtasks.findIndex((i) => i.id === activeId);
+    const newIndex = subtasks.findIndex((i) => i.id === overId);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reorderedSubtasks = arrayMove(subtasks, oldIndex, newIndex).map((subtask, index) => ({
+      ...subtask,
+      sort_order: index,
+    }));
+
+    setItems((prev) => {
+      const next: Item[] = [];
+      let inserted = false;
+
+      prev.forEach((item) => {
+        if (item.parent_id !== parent.id) {
+          next.push(item);
+          return;
+        }
+
+        if (!inserted) {
+          next.push(...reorderedSubtasks);
+          inserted = true;
+        }
+      });
+
+      return next;
+    });
+
+    await Promise.all(
+      reorderedSubtasks.map((subtask) =>
+        supabase.from('personal_items').update({ sort_order: subtask.sort_order }).eq('id', subtask.id)
+      )
+    );
+  };
+
+  const parents = items.filter((i) => i.parent_id === null);
+  const subtasksByParent = items.reduce<Record<string, Item[]>>((acc, item) => {
+    if (item.parent_id) (acc[item.parent_id] ??= []).push(item);
+    return acc;
+  }, {});
+  const todo = parents.filter((i) => i.status === 'todo');
+  const done = parents.filter((i) => i.status === 'done');
 
   return (
     <div>
@@ -148,7 +214,7 @@ export default function DailyScreen({ user }: DailyScreenProps) {
           />
           <p className="mt-4 text-sm text-[#8B7E78]">Opening your pocket...</p>
         </div>
-      ) : items.length === 0 ? (
+      ) : parents.length === 0 ? (
         <div className="flex flex-col items-center pt-10 text-center">
           <Image src="/images/empty-today.png" alt="Nothing planned" width={130} height={130} className="object-contain mb-4" />
           <p className="text-warm-text font-bold text-sm mb-1">Nothing planned yet 🌷</p>
@@ -169,6 +235,12 @@ export default function DailyScreen({ user }: DailyScreenProps) {
                       item={item}
                       onToggleDone={() => toggleDone(item)}
                       onSave={onSave}
+                      checkboxVariant="square"
+                      subtasks={subtasksByParent[item.id] ?? []}
+                      onAddSubtask={(title) => addSubtask(item, title)}
+                      onToggleSubtask={toggleDone}
+                      onDeleteSubtask={deleteItem}
+                      onReorderSubtasks={(activeId, overId) => reorderSubtasks(item, activeId, overId)}
                       actions={[
                         { label: 'Move to Tomorrow', onClick: () => moveToTomorrow(item) },
                         { label: 'Delete', onClick: () => deleteItem(item), danger: true },
@@ -196,6 +268,12 @@ export default function DailyScreen({ user }: DailyScreenProps) {
                   item={item}
                   onToggleDone={() => toggleDone(item)}
                   onSave={onSave}
+                  checkboxVariant="square"
+                  subtasks={subtasksByParent[item.id] ?? []}
+                  onAddSubtask={(title) => addSubtask(item, title)}
+                  onToggleSubtask={toggleDone}
+                  onDeleteSubtask={deleteItem}
+                  onReorderSubtasks={(activeId, overId) => reorderSubtasks(item, activeId, overId)}
                   actions={[
                     { label: 'Move to Tomorrow', onClick: () => moveToTomorrow(item) },
                     { label: 'Delete', onClick: () => deleteItem(item), danger: true },

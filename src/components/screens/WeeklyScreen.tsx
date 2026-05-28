@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { User } from '@supabase/supabase-js';
+import { arrayMove } from '@dnd-kit/sortable';
 import { supabase } from '@/lib/supabase';
 import { Item, ItemCategory, getWeekStart, toDateString, formatWeekRange } from '@/lib/types';
 import WeekChecklistItem from '@/components/WeekChecklistItem';
@@ -86,6 +87,43 @@ export default function WeeklyScreen({ user }: WeeklyScreenProps) {
       .select()
       .single();
     if (!error && data) setItems((prev) => [...prev, data as Item]);
+  };
+
+  const reorderSubtasks = async (parent: Item, activeId: string, overId: string) => {
+    const subtasks = items.filter((i) => i.parent_id === parent.id);
+    const oldIndex = subtasks.findIndex((i) => i.id === activeId);
+    const newIndex = subtasks.findIndex((i) => i.id === overId);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reorderedSubtasks = arrayMove(subtasks, oldIndex, newIndex).map((item, index) => ({
+      ...item,
+      sort_order: index,
+    }));
+
+    setItems((prev) => {
+      const next: Item[] = [];
+      let inserted = false;
+
+      prev.forEach((item) => {
+        if (item.parent_id !== parent.id) {
+          next.push(item);
+          return;
+        }
+
+        if (!inserted) {
+          next.push(...reorderedSubtasks);
+          inserted = true;
+        }
+      });
+
+      return next;
+    });
+
+    await Promise.all(
+      reorderedSubtasks.map((item) =>
+        supabase.from('personal_items').update({ sort_order: item.sort_order }).eq('id', item.id)
+      )
+    );
   };
 
   const parents = items.filter((i) => i.parent_id === null);
@@ -176,6 +214,7 @@ export default function WeeklyScreen({ user }: WeeklyScreenProps) {
                           onAddSubtask={(title) => addSubtask(item, title)}
                           onToggleSubtask={toggleItem}
                           onDeleteSubtask={deleteItem}
+                          onReorderSubtasks={(activeId, overId) => reorderSubtasks(item, activeId, overId)}
                         />
                       ))}
                     </div>

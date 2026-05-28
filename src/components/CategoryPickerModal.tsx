@@ -15,9 +15,9 @@ export default function CategoryPickerModal({ onPick, onClose }: CategoryPickerM
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" onClick={onClose} />
-      <div className="relative w-full bg-white rounded-t-3xl shadow-soft px-5 pt-5 pb-8">
+      <div className="relative w-full max-w-sm bg-white rounded-3xl shadow-soft px-5 pt-5 pb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-extrabold text-warm-text">Move to Weekly — pick section</h2>
           <button

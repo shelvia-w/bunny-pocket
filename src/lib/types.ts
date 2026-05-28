@@ -13,6 +13,7 @@ export interface Item {
   category: ItemCategory | null;
   status: ItemStatus;
   due_date: string | null;
+  deadline_date: string | null;
   week_start: string | null;
   reminder_at: string | null;
   sort_order: number;
@@ -29,6 +30,17 @@ export const CATEGORIES: { value: ItemCategory; label: string; shortLabel: strin
 export function formatReminderTime(isoString: string): string {
   const date = new Date(isoString);
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+
+export function formatDateTimeLabel(dateString: string): string {
+  const date = dateString.includes('T') ? new Date(dateString) : new Date(`${dateString}T00:00:00`);
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
 }
 
 export function toDateString(date: Date): string {

@@ -36,7 +36,7 @@ export default function AddItemModal({
     let reminder_at: string | null = null;
     if (activeTab === 'daily' && reminderTime) {
       const [h, m] = reminderTime.split(':').map(Number);
-      const d = new Date();
+      const d = new Date(`${selectedDate ?? new Date().toISOString().slice(0, 10)}T00:00:00`);
       d.setHours(h, m, 0, 0);
       reminder_at = d.toISOString();
     }

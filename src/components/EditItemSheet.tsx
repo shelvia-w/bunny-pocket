@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Item } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 
@@ -16,17 +16,32 @@ function toTimeValue(isoString: string | null): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-function buildReminderAt(timeValue: string): string | null {
+function toDateTimeLocalValue(isoString: string | null): string {
+  if (!isoString) return '';
+  const d = isoString.includes('T') ? new Date(isoString) : new Date(`${isoString}T00:00:00`);
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-') + `T${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function fromDateTimeLocalValue(value: string): string | null {
+  if (!value) return null;
+  return new Date(value).toISOString();
+}
+
+function buildReminderAt(timeValue: string, dateValue: string | null): string | null {
   if (!timeValue) return null;
   const [h, m] = timeValue.split(':').map(Number);
-  const d = new Date();
+  const d = new Date(`${dateValue ?? new Date().toISOString().slice(0, 10)}T00:00:00`);
   d.setHours(h, m, 0, 0);
   return d.toISOString();
 }
 
 export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetProps) {
   const [title, setTitle] = useState(item.title);
-  const [details, setDetails] = useState(item.details ?? '');
+  const [deadlineDate, setDeadlineDate] = useState(() => toDateTimeLocalValue(item.deadline_date));
   const [reminderTime, setReminderTime] = useState(() => toTimeValue(item.reminder_at));
   const [saving, setSaving] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -43,8 +58,8 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
 
     const updates = {
       title: trimmedTitle,
-      details: details.trim() || null,
-      reminder_at: item.list === 'daily' ? buildReminderAt(reminderTime) : item.reminder_at,
+      deadline_date: fromDateTimeLocalValue(deadlineDate),
+      reminder_at: item.list === 'daily' ? buildReminderAt(reminderTime, item.due_date) : item.reminder_at,
       updated_at: new Date().toISOString(),
     };
 
@@ -66,14 +81,13 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
         className="relative w-full max-w-sm bg-white rounded-3xl px-5 pt-5 pb-6 shadow-soft max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-extrabold text-warm-text">Edit</h2>
           <button
             onClick={onClose}
             className="w-7 h-7 rounded-full bg-cream flex items-center justify-center text-muted hover:text-warm-text transition-colors"
           >
-            ✕
+            x
           </button>
         </div>
 
@@ -93,23 +107,31 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
 
           <div>
             <label className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1.5">
-              Details{' '}
-              <span className="normal-case font-normal text-muted/70">optional</span>
+              Deadline <span className="normal-case font-normal text-muted/70">optional</span>
             </label>
-            <textarea
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder="Add notes or context…"
-              rows={3}
-              className="w-full bg-cream rounded-2xl px-4 py-3 text-sm text-warm-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-blush transition resize-none"
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="datetime-local"
+                value={deadlineDate}
+                onChange={(e) => setDeadlineDate(e.target.value)}
+                className="flex-1 bg-cream rounded-2xl px-4 py-3 text-sm text-warm-text focus:outline-none focus:ring-2 focus:ring-blush transition"
+              />
+              {deadlineDate && (
+                <button
+                  type="button"
+                  onClick={() => setDeadlineDate('')}
+                  className="text-xs text-muted hover:text-warm-text transition-colors"
+                >
+                  clear
+                </button>
+              )}
+            </div>
           </div>
 
           {item.list === 'daily' && (
             <div>
               <label className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1.5">
-                Reminder{' '}
-                <span className="normal-case font-normal text-muted/70">optional</span>
+                Reminder <span className="normal-case font-normal text-muted/70">optional</span>
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -137,7 +159,7 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
           disabled={saving || !title.trim()}
           className="mt-6 w-full bg-blush-dark text-white rounded-2xl py-3.5 text-sm font-bold disabled:opacity-40 transition-opacity active:scale-[0.98]"
         >
-          {saving ? 'Saving…' : 'Save'}
+          {saving ? 'Saving...' : 'Save'}
         </button>
       </div>
     </div>

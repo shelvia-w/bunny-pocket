@@ -11,6 +11,12 @@ interface SortableItemCardProps {
   onToggleDone?: () => void;
   onSave: (updated: Item) => void;
   accentColor?: string;
+  checkboxVariant?: 'circle' | 'square';
+  subtasks?: Item[];
+  onAddSubtask?: (title: string) => void;
+  onToggleSubtask?: (subtask: Item) => void;
+  onDeleteSubtask?: (subtask: Item) => void;
+  onReorderSubtasks?: (activeId: string, overId: string) => void;
 }
 
 export default function SortableItemCard(props: SortableItemCardProps) {

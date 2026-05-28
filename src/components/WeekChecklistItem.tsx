@@ -1,7 +1,10 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Item } from '@/lib/types';
+import { useEffect, useRef, useState } from 'react';
+import { DndContext, DragEndEvent, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Item, formatDateTimeLabel } from '@/lib/types';
 import EditItemSheet from '@/components/EditItemSheet';
 
 interface WeekChecklistItemProps {
@@ -14,6 +17,7 @@ interface WeekChecklistItemProps {
   onAddSubtask: (title: string) => void;
   onToggleSubtask: (sub: Item) => void;
   onDeleteSubtask: (sub: Item) => void;
+  onReorderSubtasks?: (activeId: string, overId: string) => void;
 }
 
 function Checkbox({ checked, onToggle, size = 'md' }: { checked: boolean; onToggle: () => void; size?: 'md' | 'sm' }) {
@@ -34,8 +38,70 @@ function Checkbox({ checked, onToggle, size = 'md' }: { checked: boolean; onTogg
   );
 }
 
+interface SubtaskRowProps {
+  subtask: Item;
+  onToggle: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: subtask.id,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="flex items-center gap-2"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.45 : 1,
+        zIndex: isDragging ? 10 : undefined,
+      }}
+    >
+      <button
+        {...listeners}
+        {...attributes}
+        className="flex-shrink-0 text-border hover:text-muted transition-colors cursor-grab active:cursor-grabbing touch-none"
+        aria-label="Drag subtask to reorder"
+      >
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
+          <circle cx="3" cy="3" r="1" /><circle cx="7" cy="3" r="1" />
+          <circle cx="3" cy="7" r="1" /><circle cx="7" cy="7" r="1" />
+          <circle cx="3" cy="11" r="1" /><circle cx="7" cy="11" r="1" />
+        </svg>
+      </button>
+      <Checkbox checked={subtask.status === 'done'} onToggle={onToggle} size="sm" />
+      <button
+        className={`flex-1 text-left text-xs ${subtask.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}
+        onClick={onEdit}
+      >
+        {subtask.title}
+      </button>
+      <button
+        onClick={onDelete}
+        className="text-border hover:text-muted transition-colors text-base leading-none flex-shrink-0"
+        aria-label="Delete subtask"
+      >
+        x
+      </button>
+    </div>
+  );
+}
+
 export default function WeekChecklistItem({
-  item, subtasks, onToggle, onDelete, onSave, onMoveToDaily, onAddSubtask, onToggleSubtask, onDeleteSubtask,
+  item,
+  subtasks,
+  onToggle,
+  onDelete,
+  onSave,
+  onMoveToDaily,
+  onAddSubtask,
+  onToggleSubtask,
+  onDeleteSubtask,
+  onReorderSubtasks,
 }: WeekChecklistItemProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -44,6 +110,10 @@ export default function WeekChecklistItem({
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const isDone = item.status === 'done';
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  );
 
   useEffect(() => {
     if (addingSubtask) inputRef.current?.focus();
@@ -56,9 +126,14 @@ export default function WeekChecklistItem({
     setAddingSubtask(false);
   };
 
+  const handleSubtaskDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !onReorderSubtasks) return;
+    onReorderSubtasks(String(active.id), String(over.id));
+  };
+
   return (
     <div className="py-2">
-      {/* Parent row */}
       <div className="flex items-center gap-2.5">
         <Checkbox checked={isDone} onToggle={onToggle} />
 
@@ -66,8 +141,10 @@ export default function WeekChecklistItem({
           <span className={`text-sm font-semibold leading-snug ${isDone ? 'line-through text-muted' : 'text-warm-text'}`}>
             {item.title}
           </span>
-          {item.details && !isDone && (
-            <p className="text-xs text-muted/60 mt-0.5 whitespace-pre-line">{item.details}</p>
+          {item.deadline_date && !isDone && (
+            <p className="text-xs text-muted mt-0.5">
+              Deadline {formatDateTimeLabel(item.deadline_date)}
+            </p>
           )}
         </button>
 
@@ -82,31 +159,24 @@ export default function WeekChecklistItem({
         </button>
       </div>
 
-      {/* Subtasks */}
       {subtasks.length > 0 && (
-        <div className="ml-6 mt-1.5 space-y-1.5">
-          {subtasks.map((sub) => (
-            <div key={sub.id} className="flex items-center gap-2">
-              <Checkbox checked={sub.status === 'done'} onToggle={() => onToggleSubtask(sub)} size="sm" />
-              <button
-                className={`flex-1 text-left text-xs ${sub.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}
-                onClick={() => setEditingSubtask(sub)}
-              >
-                {sub.title}
-              </button>
-              <button
-                onClick={() => onDeleteSubtask(sub)}
-                className="text-border hover:text-muted transition-colors text-base leading-none flex-shrink-0"
-                aria-label="Delete subtask"
-              >
-                ×
-              </button>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSubtaskDragEnd}>
+          <SortableContext items={subtasks.map((sub) => sub.id)} strategy={verticalListSortingStrategy}>
+            <div className="ml-6 mt-1.5 space-y-1.5">
+              {subtasks.map((sub) => (
+                <SubtaskRow
+                  key={sub.id}
+                  subtask={sub}
+                  onToggle={() => onToggleSubtask(sub)}
+                  onEdit={() => setEditingSubtask(sub)}
+                  onDelete={() => onDeleteSubtask(sub)}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
-      {/* Add subtask */}
       <div className="ml-6 mt-1.5">
         {addingSubtask ? (
           <input
@@ -116,10 +186,13 @@ export default function WeekChecklistItem({
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') submitSubtask();
-              if (e.key === 'Escape') { setDraft(''); setAddingSubtask(false); }
+              if (e.key === 'Escape') {
+                setDraft('');
+                setAddingSubtask(false);
+              }
             }}
             onBlur={submitSubtask}
-            placeholder="New subtask…"
+            placeholder="New subtask..."
             className="w-full text-xs text-warm-text placeholder:text-muted bg-transparent focus:outline-none py-0.5 border-b border-border"
           />
         ) : (
@@ -132,7 +205,6 @@ export default function WeekChecklistItem({
         )}
       </div>
 
-      {/* Action popover */}
       {menuOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" onClick={() => setMenuOpen(false)}>
           <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px]" />
