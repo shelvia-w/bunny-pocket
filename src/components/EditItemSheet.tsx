@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Item } from '@/lib/types';
+import { CATEGORIES, Item, ItemCategory } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 
 interface EditItemSheetProps {
@@ -28,8 +28,10 @@ function fromDateTimeLocalValue(value: string): string | null {
 export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetProps) {
   const [title, setTitle] = useState(item.title);
   const [deadlineDate, setDeadlineDate] = useState(() => toDateTimeLocalValue(item.deadline_date));
+  const [category, setCategory] = useState<ItemCategory | null>(item.category);
   const [saving, setSaving] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
+  const canEditCategory = item.list === 'weekly' && item.parent_id === null;
 
   useEffect(() => {
     const t = setTimeout(() => titleRef.current?.focus(), 150);
@@ -41,11 +43,15 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
     if (!trimmedTitle) return;
     setSaving(true);
 
-    const updates = {
+    const updates: Record<string, unknown> = {
       title: trimmedTitle,
       deadline_date: fromDateTimeLocalValue(deadlineDate),
       updated_at: new Date().toISOString(),
     };
+
+    if (canEditCategory) {
+      updates.category = category;
+    }
 
     const { data, error } = await supabase
       .from('personal_items')
@@ -112,6 +118,33 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
             </div>
           </div>
 
+          {canEditCategory && (
+            <div>
+              <label className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1.5">
+                Section
+              </label>
+              <div className="flex flex-col gap-2">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setCategory(cat.value)}
+                    className={`w-full text-left px-4 py-3 rounded-2xl border-2 text-sm font-semibold transition-all ${
+                      category === cat.value
+                        ? cat.value === 'important_urgent'
+                          ? 'border-blush bg-blush-light text-warm-text'
+                          : cat.value === 'important_not_urgent'
+                          ? 'border-lavender bg-lavender-light text-warm-text'
+                          : 'border-sage bg-sage-light text-warm-text'
+                        : 'border-border bg-cream text-muted'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <button
