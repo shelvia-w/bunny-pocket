@@ -88,6 +88,21 @@ export default function DailyScreen({ user }: DailyScreenProps) {
     setItems((prev) => prev.filter((i) => i.id !== item.id));
   };
 
+  const moveToTomorrow = async (item: Item) => {
+    const tomorrow = new Date(selectedDate + 'T00:00:00');
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dueDate = toDateString(tomorrow);
+
+    const { error } = await supabase
+      .from('personal_items')
+      .update({ due_date: dueDate, updated_at: new Date().toISOString() })
+      .eq('id', item.id);
+
+    if (!error) {
+      setItems((prev) => prev.filter((i) => i.id !== item.id));
+    }
+  };
+
   const onSave = (updated: Item) =>
     setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
 
@@ -154,7 +169,10 @@ export default function DailyScreen({ user }: DailyScreenProps) {
                       item={item}
                       onToggleDone={() => toggleDone(item)}
                       onSave={onSave}
-                      actions={[{ label: 'Delete', onClick: () => deleteItem(item), danger: true }]}
+                      actions={[
+                        { label: 'Move to Tomorrow', onClick: () => moveToTomorrow(item) },
+                        { label: 'Delete', onClick: () => deleteItem(item), danger: true },
+                      ]}
                     />
                   ))}
                 </SortableContext>
@@ -178,7 +196,10 @@ export default function DailyScreen({ user }: DailyScreenProps) {
                   item={item}
                   onToggleDone={() => toggleDone(item)}
                   onSave={onSave}
-                  actions={[{ label: 'Delete', onClick: () => deleteItem(item), danger: true }]}
+                  actions={[
+                    { label: 'Move to Tomorrow', onClick: () => moveToTomorrow(item) },
+                    { label: 'Delete', onClick: () => deleteItem(item), danger: true },
+                  ]}
                 />
               ))}
             </div>
