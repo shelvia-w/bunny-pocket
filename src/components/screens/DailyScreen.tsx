@@ -233,7 +233,6 @@ export default function DailyScreen({ user }: DailyScreenProps) {
                     <SortableItemCard
                       key={item.id}
                       item={item}
-                      onToggleDone={() => toggleDone(item)}
                       onSave={onSave}
                       checkboxVariant="square"
                       subtasks={subtasksByParent[item.id] ?? []}
@@ -242,6 +241,7 @@ export default function DailyScreen({ user }: DailyScreenProps) {
                       onDeleteSubtask={deleteItem}
                       onReorderSubtasks={(activeId, overId) => reorderSubtasks(item, activeId, overId)}
                       actions={[
+                        { label: 'Mark as completed', onClick: () => toggleDone(item) },
                         { label: 'Move to Tomorrow', onClick: () => moveToTomorrow(item) },
                         { label: 'Delete', onClick: () => deleteItem(item), danger: true },
                       ]}
