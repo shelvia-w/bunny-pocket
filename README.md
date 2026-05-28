@@ -10,7 +10,7 @@ Bunny Pocket is a cozy, mobile-first planner for capturing thoughts, planning th
    Add thoughts and tasks to the Pocket screen, then edit titles, details, or delete them anytime.
 
 2. **Plan daily tasks by date**  
-   Move items into Daily, choose a date, add optional reminder times, and mark tasks as done or todo.
+   Move items into Daily, choose a date, and mark tasks as done or todo.
 
 3. **Organize weekly priorities**  
    Plan tasks by week and group them into Important + Urgent, Important + Not Urgent, and Keep in Mind.

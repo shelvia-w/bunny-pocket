@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase';
 import { ActiveTab } from '@/lib/types';
 import AuthScreen from '@/components/AuthScreen';
 import BottomNav from '@/components/BottomNav';
-import ReminderWatcher from '@/components/ReminderWatcher';
 import PocketScreen from '@/components/screens/PocketScreen';
 import DailyScreen from '@/components/screens/DailyScreen';
 import WeeklyScreen from '@/components/screens/WeeklyScreen';
@@ -55,7 +54,6 @@ export default function Home() {
         {activeTab === 'daily'   && <DailyScreen   user={user} />}
         {activeTab === 'weekly'  && <WeeklyScreen  user={user} />}
       </main>
-      <ReminderWatcher user={user} />
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );

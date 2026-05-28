@@ -53,7 +53,7 @@ function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
   return (
     <div
       ref={setNodeRef}
-      className="flex items-center gap-2"
+      className="flex items-start gap-2"
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -64,7 +64,7 @@ function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
       <button
         {...listeners}
         {...attributes}
-        className="flex-shrink-0 text-border hover:text-muted transition-colors cursor-grab active:cursor-grabbing touch-none"
+        className="mt-0.5 flex-shrink-0 text-border hover:text-muted transition-colors cursor-grab active:cursor-grabbing touch-none"
         aria-label="Drag subtask to reorder"
       >
         <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
@@ -75,14 +75,14 @@ function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
       </button>
       <Checkbox checked={subtask.status === 'done'} onToggle={onToggle} size="sm" />
       <button
-        className={`flex-1 text-left text-xs ${subtask.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}
+        className={`flex-1 min-w-0 text-left text-xs leading-snug break-words ${subtask.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}
         onClick={onEdit}
       >
         {subtask.title}
       </button>
       <button
         onClick={onDelete}
-        className="text-border hover:text-muted transition-colors text-base leading-none flex-shrink-0"
+        className="mt-0.5 text-border hover:text-muted transition-colors text-base leading-none flex-shrink-0"
         aria-label="Delete subtask"
       >
         x
@@ -134,11 +134,13 @@ export default function WeekChecklistItem({
 
   return (
     <div className="py-2">
-      <div className="flex items-center gap-2.5">
-        <Checkbox checked={isDone} onToggle={onToggle} />
+      <div className="flex items-start gap-2.5">
+        <div className="mt-0.5">
+          <Checkbox checked={isDone} onToggle={onToggle} />
+        </div>
 
         <button className="flex-1 min-w-0 text-left" onClick={() => setEditOpen(true)}>
-          <span className={`text-sm font-semibold leading-snug ${isDone ? 'line-through text-muted' : 'text-warm-text'}`}>
+          <span className={`block text-sm font-semibold leading-snug break-words ${isDone ? 'line-through text-muted' : 'text-warm-text'}`}>
             {item.title}
           </span>
           {item.deadline_date && !isDone && (
@@ -150,7 +152,7 @@ export default function WeekChecklistItem({
 
         <button
           onClick={() => setMenuOpen(true)}
-          className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-border hover:text-muted transition-colors"
+          className="mt-0.5 flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full text-border hover:text-muted transition-colors"
           aria-label="More options"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">

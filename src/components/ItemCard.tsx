@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { DndContext, DragEndEvent, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Item, formatDateTimeLabel, formatReminderTime } from '@/lib/types';
+import { Item, formatDateTimeLabel } from '@/lib/types';
 import EditItemSheet from '@/components/EditItemSheet';
 
 export interface Action {
@@ -45,7 +45,7 @@ function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
   return (
     <div
       ref={setNodeRef}
-      className="flex items-center gap-2"
+      className="flex items-start gap-2"
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -56,7 +56,7 @@ function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
       <button
         {...listeners}
         {...attributes}
-        className="flex-shrink-0 text-border hover:text-muted transition-colors cursor-grab active:cursor-grabbing touch-none"
+        className="mt-0.5 flex-shrink-0 text-border hover:text-muted transition-colors cursor-grab active:cursor-grabbing touch-none"
         aria-label="Drag subtask to reorder"
       >
         <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor">
@@ -67,7 +67,7 @@ function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
       </button>
       <button
         onClick={onToggle}
-        className={`w-3.5 h-3.5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+        className={`mt-0.5 w-3.5 h-3.5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
           subtask.status === 'done' ? 'bg-sage border-sage' : 'border-border hover:border-sage'
         }`}
         aria-label={subtask.status === 'done' ? 'Mark subtask undone' : 'Mark subtask done'}
@@ -79,14 +79,14 @@ function SubtaskRow({ subtask, onToggle, onEdit, onDelete }: SubtaskRowProps) {
         )}
       </button>
       <button
-        className={`flex-1 text-left text-xs ${subtask.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}
+        className={`flex-1 min-w-0 text-left text-xs leading-snug break-words ${subtask.status === 'done' ? 'line-through text-muted' : 'text-warm-text/80'}`}
         onClick={onEdit}
       >
         {subtask.title}
       </button>
       <button
         onClick={onDelete}
-        className="text-border hover:text-muted transition-colors text-base leading-none flex-shrink-0"
+        className="mt-0.5 text-border hover:text-muted transition-colors text-base leading-none flex-shrink-0"
         aria-label="Delete subtask"
       >
         x
@@ -116,6 +116,11 @@ export default function ItemCard({
   const [addingSubtask, setAddingSubtask] = useState(false);
   const [subtaskDraft, setSubtaskDraft] = useState('');
   const isDone = item.status === 'done';
+  const subtaskIndentClass = dragHandleListeners && onToggleDone
+    ? 'pl-[4.5rem]'
+    : onToggleDone
+    ? 'pl-[3.25rem]'
+    : 'pl-[2.625rem]';
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -183,12 +188,6 @@ export default function ItemCard({
                 {item.title}
               </p>
             </button>
-            {item.reminder_at && !isDone && (
-              <p className="text-xs text-muted mt-0.5 flex items-center gap-1">
-                <span>⏰</span>
-                {formatReminderTime(item.reminder_at)}
-              </p>
-            )}
             {item.deadline_date && !isDone && (
               <p className="text-xs text-muted mt-0.5">
                 Deadline: {formatDateTimeLabel(item.deadline_date)}
@@ -198,7 +197,7 @@ export default function ItemCard({
 
           <button
             onClick={() => setMenuOpen(true)}
-            className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full hover:bg-cream transition-colors text-muted"
+            className="mt-0.5 flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full hover:bg-cream transition-colors text-muted"
             aria-label="More options"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -210,7 +209,7 @@ export default function ItemCard({
         </div>
 
         {(subtasks.length > 0 || onAddSubtask) && (
-          <div className={`px-4 pb-3 mt-1.5 ${onToggleDone ? 'pl-[4.5rem]' : 'pl-[2.625rem]'}`}>
+          <div className={`px-4 pb-3 mt-1.5 ${subtaskIndentClass}`}>
             {subtasks.length > 0 && onToggleSubtask && onDeleteSubtask && (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSubtaskDragEnd}>
                 <SortableContext items={subtasks.map((subtask) => subtask.id)} strategy={verticalListSortingStrategy}>

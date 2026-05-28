@@ -27,11 +27,6 @@ export const CATEGORIES: { value: ItemCategory; label: string; shortLabel: strin
   { value: 'keep_in_mind',         label: 'Keep in Mind',           shortLabel: '🟢 Notes' },
 ];
 
-export function formatReminderTime(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-}
-
 export function formatDateTimeLabel(dateString: string): string {
   const date = dateString.includes('T') ? new Date(dateString) : new Date(`${dateString}T00:00:00`);
   return date.toLocaleString('en-US', {

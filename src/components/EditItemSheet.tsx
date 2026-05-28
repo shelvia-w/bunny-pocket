@@ -10,12 +10,6 @@ interface EditItemSheetProps {
   onClose: () => void;
 }
 
-function toTimeValue(isoString: string | null): string {
-  if (!isoString) return '';
-  const d = new Date(isoString);
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-}
-
 function toDateTimeLocalValue(isoString: string | null): string {
   if (!isoString) return '';
   const d = isoString.includes('T') ? new Date(isoString) : new Date(`${isoString}T00:00:00`);
@@ -31,18 +25,9 @@ function fromDateTimeLocalValue(value: string): string | null {
   return new Date(value).toISOString();
 }
 
-function buildReminderAt(timeValue: string, dateValue: string | null): string | null {
-  if (!timeValue) return null;
-  const [h, m] = timeValue.split(':').map(Number);
-  const d = new Date(`${dateValue ?? new Date().toISOString().slice(0, 10)}T00:00:00`);
-  d.setHours(h, m, 0, 0);
-  return d.toISOString();
-}
-
 export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetProps) {
   const [title, setTitle] = useState(item.title);
   const [deadlineDate, setDeadlineDate] = useState(() => toDateTimeLocalValue(item.deadline_date));
-  const [reminderTime, setReminderTime] = useState(() => toTimeValue(item.reminder_at));
   const [saving, setSaving] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -59,7 +44,6 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
     const updates = {
       title: trimmedTitle,
       deadline_date: fromDateTimeLocalValue(deadlineDate),
-      reminder_at: item.list === 'daily' ? buildReminderAt(reminderTime, item.due_date) : item.reminder_at,
       updated_at: new Date().toISOString(),
     };
 
@@ -128,30 +112,6 @@ export default function EditItemSheet({ item, onSave, onClose }: EditItemSheetPr
             </div>
           </div>
 
-          {item.list === 'daily' && (
-            <div>
-              <label className="text-xs text-muted font-semibold uppercase tracking-wider block mb-1.5">
-                Reminder <span className="normal-case font-normal text-muted/70">optional</span>
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="time"
-                  value={reminderTime}
-                  onChange={(e) => setReminderTime(e.target.value)}
-                  className="flex-1 bg-cream rounded-2xl px-4 py-3 text-sm text-warm-text focus:outline-none focus:ring-2 focus:ring-blush transition"
-                />
-                {reminderTime && (
-                  <button
-                    type="button"
-                    onClick={() => setReminderTime('')}
-                    className="text-xs text-muted hover:text-warm-text transition-colors"
-                  >
-                    clear
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         <button

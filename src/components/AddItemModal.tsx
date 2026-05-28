@@ -8,8 +8,8 @@ import { ActiveTab, ItemCategory, CATEGORIES } from '@/lib/types';
 interface AddItemModalProps {
   user: User;
   activeTab: ActiveTab;
-  selectedDate?: string;      // for daily
-  selectedWeekStart?: string; // for weekly
+  selectedDate?: string;
+  selectedWeekStart?: string;
   onClose: () => void;
   onAdded: () => void;
 }
@@ -18,7 +18,6 @@ export default function AddItemModal({
   user, activeTab, selectedDate, selectedWeekStart, onClose, onAdded,
 }: AddItemModalProps) {
   const [title, setTitle] = useState('');
-  const [reminderTime, setReminderTime] = useState('');
   const [category, setCategory] = useState<ItemCategory>('important_urgent');
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -33,19 +32,10 @@ export default function AddItemModal({
     if (!title.trim()) return;
     setLoading(true);
 
-    let reminder_at: string | null = null;
-    if (activeTab === 'daily' && reminderTime) {
-      const [h, m] = reminderTime.split(':').map(Number);
-      const d = new Date(`${selectedDate ?? new Date().toISOString().slice(0, 10)}T00:00:00`);
-      d.setHours(h, m, 0, 0);
-      reminder_at = d.toISOString();
-    }
-
     const payload: Record<string, unknown> = {
       user_id: user.id,
       title: title.trim(),
       list: activeTab,
-      reminder_at,
     };
 
     if (activeTab === 'daily') {
@@ -63,13 +53,13 @@ export default function AddItemModal({
 
   const TAB_LABELS: Record<ActiveTab, string> = {
     pocket: 'Add to Pocket',
-    daily:  'Add to Daily',
+    daily: 'Add to Daily',
     weekly: 'Add to Weekly',
   };
 
   const PLACEHOLDERS: Record<ActiveTab, string> = {
     pocket: "What's on your mind?",
-    daily:  'What do you need to do today?',
+    daily: 'What do you need to do today?',
     weekly: 'What should you work on?',
   };
 
@@ -87,7 +77,7 @@ export default function AddItemModal({
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-extrabold text-warm-text">{TAB_LABELS[activeTab]}</h2>
-          <button onClick={onClose} className="w-7 h-7 rounded-full bg-cream flex items-center justify-center text-muted hover:text-warm-text transition-colors">✕</button>
+          <button onClick={onClose} className="w-7 h-7 rounded-full bg-cream flex items-center justify-center text-muted hover:text-warm-text transition-colors">&times;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -99,21 +89,6 @@ export default function AddItemModal({
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-4 py-3.5 rounded-2xl border border-border bg-cream text-warm-text placeholder:text-muted text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blush transition"
           />
-
-          {activeTab === 'daily' && (
-            <div className="flex items-center gap-3">
-              <label className="text-xs text-muted font-semibold flex-shrink-0">⏰ Reminder</label>
-              <input
-                type="time"
-                value={reminderTime}
-                onChange={(e) => setReminderTime(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl border border-border bg-cream text-warm-text text-sm focus:outline-none focus:ring-2 focus:ring-blush transition"
-              />
-              {reminderTime && (
-                <button type="button" onClick={() => setReminderTime('')} className="text-xs text-muted hover:text-warm-text">clear</button>
-              )}
-            </div>
-          )}
 
           {activeTab === 'weekly' && (
             <div className="space-y-2">
