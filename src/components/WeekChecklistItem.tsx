@@ -14,6 +14,7 @@ interface WeekChecklistItemProps {
   onDelete: () => void;
   onSave: (updated: Item) => void;
   onMoveToDaily: () => void;
+  onMoveToNextWeek?: () => void;
   onAddSubtask: (title: string) => void;
   onToggleSubtask: (sub: Item) => void;
   onDeleteSubtask: (sub: Item) => void;
@@ -98,6 +99,7 @@ export default function WeekChecklistItem({
   onDelete,
   onSave,
   onMoveToDaily,
+  onMoveToNextWeek,
   onAddSubtask,
   onToggleSubtask,
   onDeleteSubtask,
@@ -221,6 +223,9 @@ export default function WeekChecklistItem({
             <div className="flex flex-col gap-1">
               <button onClick={() => { setMenuOpen(false); setEditOpen(true); }} className="w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold text-warm-text hover:bg-cream transition-colors">Edit</button>
               <button onClick={() => { onMoveToDaily(); setMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold text-warm-text hover:bg-cream transition-colors">Move to Daily</button>
+              {onMoveToNextWeek && (
+                <button onClick={() => { onMoveToNextWeek(); setMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold text-warm-text hover:bg-cream transition-colors">Move to Next Week</button>
+              )}
               <button onClick={() => { onDelete(); setMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-2xl text-sm font-semibold text-rose-300 hover:bg-rose-50 transition-colors">Delete</button>
             </div>
           </div>

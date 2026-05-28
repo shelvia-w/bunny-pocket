@@ -73,6 +73,25 @@ export default function WeeklyScreen({ user }: WeeklyScreenProps) {
     removeItem(item.id);
   };
 
+  const moveToNextWeek = async (item: Item) => {
+    const nextWeek = new Date((item.week_start ?? weekStart) + 'T00:00:00');
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const nextWeekStart = toDateString(nextWeek);
+    const updatedAt = new Date().toISOString();
+
+    await supabase
+      .from('personal_items')
+      .update({ week_start: nextWeekStart, updated_at: updatedAt })
+      .eq('id', item.id);
+
+    await supabase
+      .from('personal_items')
+      .update({ week_start: nextWeekStart, updated_at: updatedAt })
+      .eq('parent_id', item.id);
+
+    removeItem(item.id);
+  };
+
   const addSubtask = async (parent: Item, title: string) => {
     const { data, error } = await supabase
       .from('personal_items')
@@ -211,6 +230,7 @@ export default function WeeklyScreen({ user }: WeeklyScreenProps) {
                           onDelete={() => deleteItem(item)}
                           onSave={updateItem}
                           onMoveToDaily={() => moveToDaily(item)}
+                          onMoveToNextWeek={() => moveToNextWeek(item)}
                           onAddSubtask={(title) => addSubtask(item, title)}
                           onToggleSubtask={toggleItem}
                           onDeleteSubtask={deleteItem}
