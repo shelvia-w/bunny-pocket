@@ -181,33 +181,35 @@ export default function WeekChecklistItem({
         </DndContext>
       )}
 
-      <div className="ml-6 mt-1.5">
-        {addingSubtask ? (
-          <input
-            ref={inputRef}
-            type="text"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') submitSubtask();
-              if (e.key === 'Escape') {
-                setDraft('');
-                setAddingSubtask(false);
-              }
-            }}
-            onBlur={submitSubtask}
-            placeholder="New subtask..."
-            className="w-full text-xs text-warm-text placeholder:text-muted bg-transparent focus:outline-none py-0.5 border-b border-border"
-          />
-        ) : (
-          <button
-            onClick={() => setAddingSubtask(true)}
-            className="text-xs text-muted/60 hover:text-muted transition-colors"
-          >
-            + Add subtask
-          </button>
-        )}
-      </div>
+      {!isDone && (
+        <div className="ml-6 mt-1.5">
+          {addingSubtask ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') submitSubtask();
+                if (e.key === 'Escape') {
+                  setDraft('');
+                  setAddingSubtask(false);
+                }
+              }}
+              onBlur={submitSubtask}
+              placeholder="New subtask..."
+              className="w-full text-xs text-warm-text placeholder:text-muted bg-transparent focus:outline-none py-0.5 border-b border-border"
+            />
+          ) : (
+            <button
+              onClick={() => setAddingSubtask(true)}
+              className="text-xs text-muted/60 hover:text-muted transition-colors"
+            >
+              + Add subtask
+            </button>
+          )}
+        </div>
+      )}
 
       {menuOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-6" onClick={() => setMenuOpen(false)}>

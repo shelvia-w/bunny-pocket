@@ -208,7 +208,7 @@ export default function ItemCard({
           </button>
         </div>
 
-        {(subtasks.length > 0 || onAddSubtask) && (
+        {(subtasks.length > 0 || (!isDone && onAddSubtask)) && (
           <div className={`px-4 pb-3 mt-1.5 ${subtaskIndentClass}`}>
             {subtasks.length > 0 && onToggleSubtask && onDeleteSubtask && (
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleSubtaskDragEnd}>
@@ -228,7 +228,7 @@ export default function ItemCard({
               </DndContext>
             )}
 
-            {onAddSubtask && (
+            {!isDone && onAddSubtask && (
               <div className={subtasks.length > 0 ? 'mt-1.5' : 'mt-0'}>
                 {addingSubtask ? (
                   <input
